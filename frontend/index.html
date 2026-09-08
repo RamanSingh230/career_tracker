@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vantage — Career Readiness Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#EAEDE6;
+    --surface:#F8F9F5;
+    --surface-raised:#FFFFFF;
+    --ink:#1E2A22;
+    --ink-soft:#54615A;
+    --ink-faint:#8A9389;
+    --gold:#AD7B24;
+    --gold-soft:#EFE1C4;
+    --teal:#2C6A5E;
+    --teal-soft:#DCEAE5;
+    --rust:#9C4B34;
+    --rust-soft:#F3E1DA;
+    --line:#D6D9CD;
+    --line-strong:#B9BFAE;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(30,42,34,0.06), 0 8px 24px rgba(30,42,34,0.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    margin:0;
+    color:var(--ink);
+  }
+  p{margin:0;}
+  button{font-family:inherit;}
+  ::selection{background:var(--gold-soft);}
+  :focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+  .shell{max-width:920px;margin:0 auto;padding:0 24px 80px;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    background:var(--ink);
+    color:var(--surface);
+    padding:36px 0 0;
+  }
+  .top-inner{max-width:920px;margin:0 auto;padding:0 24px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;}
+  .brand{display:flex;flex-direction:column;gap:6px;}
+  .brand-mark{
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+    letter-spacing:0.04em;
+    color:var(--gold-soft);
+  }
+  .brand h1{color:var(--surface);font-size:34px;letter-spacing:-0.01em;}
+  .tagline{color:#B7C0B6;font-size:15px;max-width:34ch;}
+  .meta-note{font-size:12.5px;color:#8C9A8C;font-family:'IBM Plex Mono', monospace;text-align:right;line-height:1.6;}
+
+  /* ---------- Tabs ---------- */
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    max-width:920px;
+    margin:0 auto;
+    padding:0 24px;
+    transform:translateY(1px);
+  }
+  .tab-btn{
+    appearance:none;
+    border:1px solid var(--line-strong);
+    border-bottom:none;
+    background:#DDE1D4;
+    color:var(--ink-soft);
+    padding:12px 18px 13px;
+    border-radius:8px 8px 0 0;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease;
+    position:relative;
+  }
+  .tab-btn .n{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+    margin-right:8px;
+  }
+  .tab-btn:hover{background:#E6E9DD;color:var(--ink);}
+  .tab-btn[aria-selected="true"]{
+    background:var(--surface);
+    color:var(--ink);
+    border-color:var(--line);
+  }
+  .tab-btn[aria-selected="true"] .n{color:var(--gold);}
+  .tab-btn[disabled]{cursor:not-allowed;opacity:0.55;}
+
+  main{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:0 10px 10px 10px;
+    box-shadow:var(--shadow);
+  }
+  .panel{padding:40px 36px;display:none;}
+  .panel.active{display:block;animation:fadein 0.35s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .panel-head{margin-bottom:28px;max-width:60ch;}
+  .panel-head h2{font-size:24px;margin-bottom:8px;}
+  .panel-head p{color:var(--ink-soft);font-size:14.5px;}
+
+  /* ---------- Form (Analyze tab) ---------- */
+  .field{margin-bottom:22px;}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+  .field label .hint{font-weight:400;color:var(--ink-faint);font-size:12.5px;}
+  textarea, input[type="text"]{
+    width:100%;
+    border:1px solid var(--line-strong);
+    border-radius:8px;
+    padding:12px 14px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--surface-raised);
+    resize:vertical;
+  }
+  textarea:focus, input:focus{border-color:var(--teal);}
+  textarea{min-height:120px;}
+  #resumeText{min-height:160px;}
+
+  .upload-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  .file-btn{
+    border:1px dashed var(--line-strong);
+    background:var(--surface-raised);
+    color:var(--ink-soft);
+    padding:9px 14px;
+    border-radius:7px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .file-btn:hover{border-color:var(--teal);color:var(--ink);}
+  .file-status{font-size:12.5px;color:var(--ink-faint);}
+
+  .example-link{
+    background:none;border:none;color:var(--teal);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;
+  }
+
+  .primary-btn{
+    background:var(--ink);
+    color:var(--surface);
+    border:none;
+    padding:13px 24px;
+    border-radius:8px;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .primary-btn:hover{background:#2C3B31;}
+  .primary-btn:disabled{background:var(--ink-faint);cursor:not-allowed;}
+  .secondary-btn{
+    background:none;
+    border:1px solid var(--line-strong);
+    color:var(--ink);
+    padding:10px 18px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .secondary-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+  .action-row{display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap;}
+  .error-msg{color:var(--rust);font-size:13.5px;background:var(--rust-soft);border:1px solid #E4C1B2;padding:10px 14px;border-radius:8px;margin-top:16px;display:none;}
+
+  .loading-row{display:none;align-items:center;gap:10px;color:var(--ink-soft);font-size:13.5px;}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-strong);border-top-color:var(--teal);animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Empty state ---------- */
+  .empty-state{
+    border:1px dashed var(--line-strong);
+    border-radius:10px;
+    padding:44px 32px;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .empty-state p{max-width:40ch;margin:0 auto 18px;font-size:14.5px;}
+
+  /* ---------- Score tab ---------- */
+  .score-hero{display:flex;gap:32px;align-items:center;margin-bottom:32px;flex-wrap:wrap;}
+  .ring-wrap{position:relative;width:150px;height:150px;flex-shrink:0;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-num{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .ring-num .val{font-family:'Source Serif 4', serif;font-size:38px;font-weight:600;color:var(--ink);}
+  .ring-num .lbl{font-size:11px;color:var(--ink-faint);font-family:'IBM Plex Mono', monospace;margin-top:2px;}
+  .score-copy{flex:1;min-width:220px;}
+  .score-copy h3{font-size:19px;margin-bottom:8px;}
+  .score-copy p{color:var(--ink-soft);font-size:14.5px;}
+
+  .strengths{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .chip{
+    background:var(--teal-soft);
+    color:var(--teal);
+    border:1px solid #BFDBD3;
+    padding:7px 13px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:500;
+  }
+
+  .section-block{margin-top:34px;padding-top:28px;border-top:1px solid var(--line);}
+  .section-block h3{font-size:16px;margin-bottom:16px;}
+  .gap-list{display:flex;flex-direction:column;gap:12px;}
+  .gap-item{
+    display:flex;gap:14px;padding:14px 16px;background:var(--surface-raised);border:1px solid var(--line);border-radius:8px;
+  }
+  .gap-item .dot{width:7px;height:7px;border-radius:50%;background:var(--rust);margin-top:7px;flex-shrink:0;}
+  .gap-item .skill{font-weight:600;font-size:14px;}
+  .gap-item .why{color:var(--ink-soft);font-size:13.5px;margin-top:2px;}
+
+  .improve-list{display:flex;flex-direction:column;gap:0;}
+  .improve-item{
+    display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px;
+  }
+  .improve-item:last-child{border-bottom:none;}
+  .improve-item .num{font-family:'IBM Plex Mono', monospace;color:var(--gold);font-size:13px;flex-shrink:0;padding-top:1px;}
+
+  /* ---------- Roadmap tab ---------- */
+  .roadmap-track{display:flex;flex-direction:column;}
+  .week-row{display:flex;gap:20px;padding:20px 0;border-top:1px solid var(--line);}
+  .week-row:first-child{border-top:none;}
+  .week-badge{
+    flex-shrink:0;width:52px;height:52px;border-radius:8px;background:var(--gold-soft);color:var(--gold);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'IBM Plex Mono', monospace;
+  }
+  .week-badge .wk{font-size:9.5px;letter-spacing:0.04em;}
+  .week-badge .num{font-size:18px;font-weight:600;}
+  .week-body h4{font-family:'Source Serif 4', serif;font-size:16.5px;font-weight:600;margin:2px 0 8px;}
+  .week-body ul{margin:0;padding-left:18px;color:var(--ink-soft);font-size:14px;line-height:1.7;}
+
+  /* ---------- Interview prep tab ---------- */
+  .q-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+  @media (max-width:640px){.q-cols{grid-template-columns:1fr;}}
+  .q-col h3{font-size:15px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .q-col h3 .swatch{width:9px;height:9px;border-radius:2px;}
+  .q-col.tech .swatch{background:var(--teal);}
+  .q-col.beh .swatch{background:var(--gold);}
+  .q-list{display:flex;flex-direction:column;gap:12px;}
+  .q-item{
+    background:var(--surface-raised);border:1px solid var(--line);border-radius:8px;padding:13px 15px;font-size:13.8px;
+  }
+  .future-block{
+    margin-top:32px;padding:20px 22px;background:var(--teal-soft);border:1px solid #BFDBD3;border-radius:10px;
+  }
+  .future-block h3{font-size:14.5px;color:var(--teal);margin-bottom:8px;}
+  .future-block p{font-size:14px;color:#274F46;}
+
+  footer{max-width:920px;margin:28px auto 0;padding:0 24px;color:var(--ink-faint);font-size:12px;text-align:center;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+
+  @media (max-width:640px){
+    .top-inner{flex-direction:column;align-items:flex-start;}
+    .meta-note{text-align:left;}
+    .panel{padding:28px 20px;}
+    .tab-btn{padding:10px 12px 11px;font-size:12.5px;}
+    .tab-btn .n{margin-right:5px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <span class="brand-mark">VANTAGE</span>
+      <h1>Career readiness, in one pass.</h1>
+      <p class="tagline">Paste a job description and your resume — get a match score, a study roadmap, and the questions you'll actually get asked.</p>
+    </div>
+    <div class="meta-note">analysis generated live<br>by gemini</div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn" data-tab="analyze" role="tab" aria-selected="true"><span class="n">01</span>Analyze</button>
+    <button class="tab-btn" data-tab="score" role="tab" aria-selected="false" disabled><span class="n">02</span>Score Report</button>
+    <button class="tab-btn" data-tab="roadmap" role="tab" aria-selected="false" disabled><span class="n">03</span>Roadmap</button>
+    <button class="tab-btn" data-tab="prep" role="tab" aria-selected="false" disabled><span class="n">04</span>Interview Prep</button>
+  </nav>
+
+  <main>
+    <!-- ANALYZE -->
+    <section class="panel active" data-panel="analyze">
+      <div class="panel-head">
+        <h2>Start with the job and your resume</h2>
+        <p>Everything below runs through Gemini via the backend — nothing is stored anywhere.</p>
+      </div>
+
+      <div class="field">
+        <label for="jobDesc">Job description <span class="hint">paste the full posting</span></label>
+        <textarea id="jobDesc" placeholder="e.g. We're looking for a Frontend Engineer with 2+ years of React experience..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="resumeText">Your resume <span class="hint">upload a .pdf/.txt, or paste it</span></label>
+        <div class="upload-row">
+          <label class="file-btn">
+            Upload file
+            <input type="file" id="fileInput" accept=".pdf,.txt" style="display:none;">
+          </label>
+          <span class="file-status" id="fileStatus">No file selected</span>
+        </div>
+        <textarea id="resumeText" placeholder="Paste your resume text here, or upload a file above."></textarea>
+      </div>
+
+      <div class="action-row">
+        <button class="primary-btn" id="runBtn">Run analysis</button>
+        <button class="example-link" id="exampleBtn" type="button">Try an example instead</button>
+        <div class="loading-row" id="loadingRow"><span class="spinner"></span><span>Reading your resume against the role…</span></div>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </section>
+
+    <!-- SCORE -->
+    <section class="panel" data-panel="score">
+      <div id="scoreEmpty" class="empty-state">
+        <p>Run an analysis first — your match score and resume feedback will show up here.</p>
+        <button class="secondary-btn" data-goto="analyze">Go to Analyze</button>
+      </div>
+      <div id="scoreContent" style="display:none;">
+        <div class="score-hero">
+          <div class="ring-wrap">
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <circle cx="75" cy="75" r="64" fill="none" stroke="#E3E6DA" stroke-width="12"/>
+              <circle id="scoreRing" cx="75" cy="75" r="64" fill="none" stroke="#AD7B24" stroke-width="12" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402"/>
+            </svg>
+            <div class="ring-num"><span class="val" id="scoreVal">0</span><span class="lbl">MATCH SCORE</span></div>
+          </div>
+          <div class="score-copy">
+            <h3>Where you stand</h3>
+            <p id="scoreSummary"></p>
+            <div class="strengths" id="strengthChips"></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3>Skill gaps against this role</h3>
+          <div class="gap-list" id="gapList"></div>
+        </div>
+
+        <div class="section-block">
+          <h3>How to improve your resume</h3>
+          <div class="improve-list" id="improveList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section class="panel" data-panel="roadmap">
+      <div id="roadmapEmpty" class="empty-state">
+        <p>Run an analysis first — a 4-week roadmap built from your actual skill gaps will show up here.</p>
+        <button class="secondary-btn" data-goto="analyze">Go to Analyze</button>
+      </div>
+      <div id="roadmapContent" style="display:none;">
+        <div class="panel-head">
+          <h2>Your 4-week roadmap</h2>
+          <p>Built from the gaps found in your Score Report — closest priorities first.</p>
+        </div>
+        <div class="roadmap-track" id="roadmapTrack"></div>
+      </div>
+    </section>
+
+    <!-- PREP -->
+    <section class="panel" data-panel="prep">
+      <div id="prepEmpty" class="empty-state">
+        <p>Run an analysis first — likely interview questions and the role's outlook will show up here.</p>
+        <button class="secondary-btn" data-goto="analyze">Go to Analyze</button>
+      </div>
+      <div id="prepContent" style="display:none;">
+        <div class="panel-head">
+          <h2>Interview prep</h2>
+          <p>Questions this role is likely to ask, based on the posting and your background.</p>
+        </div>
+        <div class="q-cols">
+          <div class="q-col tech">
+            <h3><span class="swatch"></span>Technical</h3>
+            <div class="q-list" id="techList"></div>
+          </div>
+          <div class="q-col beh">
+            <h3><span class="swatch"></span>Behavioral</h3>
+            <div class="q-list" id="behList"></div>
+          </div>
+        </div>
+        <div class="future-block">
+          <h3>Where this role is heading</h3>
+          <p id="futureScope"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Scores and suggestions are directional, generated by AI from the text you provide — use them as a starting point, not a verdict.</footer>
+</div>
+
+<script>
+(function(){
+  if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.panel');
+
+  function goTo(name){
+    tabs.forEach(t => {
+      const on = t.dataset.tab === name;
+      t.setAttribute('aria-selected', on ? 'true':'false');
+    });
+    panels.forEach(p => p.classList.toggle('active', p.dataset.panel === name));
+  }
+  tabs.forEach(t => t.addEventListener('click', () => { if(!t.disabled) goTo(t.dataset.tab); }));
+  document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => goTo(b.dataset.goto)));
+
+  const jobDescEl = document.getElementById('jobDesc');
+  const resumeTextEl = document.getElementById('resumeText');
+  const fileInput = document.getElementById('fileInput');
+  const fileStatus = document.getElementById('fileStatus');
+  const runBtn = document.getElementById('runBtn');
+  const exampleBtn = document.getElementById('exampleBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const loadingRow = document.getElementById('loadingRow');
+
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    fileStatus.textContent = 'Reading ' + file.name + '…';
+    try{
+      if(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')){
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+        let text = '';
+        for(let i=1;i<=pdf.numPages;i++){
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(it => it.str).join(' ') + '\n';
+        }
+        resumeTextEl.value = text.trim();
+      } else {
+        const text = await file.text();
+        resumeTextEl.value = text.trim();
+      }
+      fileStatus.textContent = file.name + ' loaded — edit the text below if needed.';
+    }catch(err){
+      fileStatus.textContent = "Couldn't read that file automatically — paste your resume text below instead.";
+    }
+  });
+
+  exampleBtn.addEventListener('click', () => {
+    jobDescEl.value = "Frontend Engineer (React) — Series B fintech startup.\nWe're looking for a Frontend Engineer to join our 6-person product team. You'll build customer-facing dashboards in React, work closely with design on a component library, and help set frontend architecture as we scale. Requirements: 2+ years with React and modern JS, experience with REST APIs, comfort with Git workflows and code review. Nice to have: TypeScript, testing (Jest/RTL), CI/CD experience, exposure to design systems.";
+    resumeTextEl.value = "Jordan Lee\nSoftware Engineering student, graduating May 2027.\n\nProjects:\n- Built a full-stack task manager using React, Node.js, Express, and MongoDB. Implemented JWT authentication and REST APIs.\n- Cloned and extended an open-source AI career-prep platform; added a new resume comparison feature and wrote unit tests.\n- Built a 3D portfolio site using Three.js and React Three Fiber.\n\nSkills: JavaScript, React, HTML/CSS, Node.js, Express, MongoDB, Git, basic Python.\n\nCoursework: Data Structures, Web Development, Database Systems.\n\nNo professional internship experience yet. Active on GitHub with 4 public repos.";
+    fileStatus.textContent = 'Example loaded';
+  });
+
+  function setLoading(on){
+    runBtn.disabled = on;
+    loadingRow.style.display = on ? 'flex' : 'none';
+    errorMsg.style.display = 'none';
+  }
+  function showError(msg){
+    errorMsg.textContent = msg;
+    errorMsg.style.display = 'block';
+  }
+
+  runBtn.addEventListener('click', async () => {
+    const jobDesc = jobDescEl.value.trim();
+    const resumeText = resumeTextEl.value.trim();
+    if(jobDesc.length < 20 || resumeText.length < 20){
+      showError('Add a bit more detail to both the job description and your resume — a couple sentences each at minimum.');
+      return;
+    }
+    setLoading(true);
+    try{
+      const result = await analyze(jobDesc, resumeText);
+      renderResults(result);
+      tabs.forEach(t => { if(t.dataset.tab !== 'analyze') t.disabled = false; });
+      goTo('score');
+    }catch(err){
+      console.error(err);
+      showError('Analysis failed — ' + (err.message || 'please try again.'));
+    }finally{
+      setLoading(false);
+    }
+  });
+
+  // If the frontend is hosted separately from the backend (e.g. frontend on
+  // GitHub Pages/Vercel, backend on Render/Railway), set this to the
+  // backend's full URL, e.g. 'https://vantage-backend.onrender.com'.
+  // Leave empty if both are served from the same origin.
+  const API_BASE = '';
+
+  async function analyze(jobDesc, resumeText){
+    const response = await fetch(API_BASE + "/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobDesc, resumeText })
+    });
+    const data = await response.json();
+    if(!response.ok){
+      throw new Error(data.error || ('The analysis service returned an error (status ' + response.status + ').'));
+    }
+    return data;
+  }
+
+  function renderResults(r){
+    // Score tab
+    document.getElementById('scoreEmpty').style.display = 'none';
+    document.getElementById('scoreContent').style.display = 'block';
+    const score = Math.max(0, Math.min(100, Number(r.matchScore) || 0));
+    document.getElementById('scoreVal').textContent = score;
+    document.getElementById('scoreSummary').textContent = r.matchSummary || '';
+    const circumference = 2 * Math.PI * 64;
+    const ring = document.getElementById('scoreRing');
+    ring.style.strokeDasharray = circumference;
+    ring.style.strokeDashoffset = circumference;
+    ring.style.transition = 'stroke-dashoffset 1s ease';
+    requestAnimationFrame(() => {
+      const offset = circumference - (score/100) * circumference;
+      requestAnimationFrame(() => { ring.style.strokeDashoffset = offset; });
+    });
+
+    const chipsWrap = document.getElementById('strengthChips');
+    chipsWrap.innerHTML = '';
+    (r.topStrengths || []).forEach(s => {
+      const el = document.createElement('span');
+      el.className = 'chip';
+      el.textContent = s;
+      chipsWrap.appendChild(el);
+    });
+
+    const gapList = document.getElementById('gapList');
+    gapList.innerHTML = '';
+    (r.skillGaps || []).forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'gap-item';
+      el.innerHTML = '<span class="dot"></span><div><div class="skill"></div><div class="why"></div></div>';
+      el.querySelector('.skill').textContent = g.skill || '';
+      el.querySelector('.why').textContent = g.why || '';
+      gapList.appendChild(el);
+    });
+
+    const improveList = document.getElementById('improveList');
+    improveList.innerHTML = '';
+    (r.resumeImprovements || []).forEach((imp, i) => {
+      const el = document.createElement('div');
+      el.className = 'improve-item';
+      el.innerHTML = '<span class="num"></span><span></span>';
+      el.querySelector('.num').textContent = String(i+1).padStart(2,'0');
+      el.querySelector('span:last-child').textContent = imp;
+      improveList.appendChild(el);
+    });
+
+    // Roadmap tab
+    document.getElementById('roadmapEmpty').style.display = 'none';
+    document.getElementById('roadmapContent').style.display = 'block';
+    const track = document.getElementById('roadmapTrack');
+    track.innerHTML = '';
+    (r.roadmap || []).forEach(w => {
+      const row = document.createElement('div');
+      row.className = 'week-row';
+      const tasks = (w.tasks || []).map(t => '<li>' + escapeHtml(t) + '</li>').join('');
+      row.innerHTML = '<div class="week-badge"><span class="wk">WEEK</span><span class="num">' + (w.week||'') + '</span></div>' +
+        '<div class="week-body"><h4>' + escapeHtml(w.focus||'') + '</h4><ul>' + tasks + '</ul></div>';
+      track.appendChild(row);
+    });
+
+    // Prep tab
+    document.getElementById('prepEmpty').style.display = 'none';
+    document.getElementById('prepContent').style.display = 'block';
+    const techList = document.getElementById('techList');
+    const behList = document.getElementById('behList');
+    techList.innerHTML = '';
+    behList.innerHTML = '';
+    ((r.interviewQuestions && r.interviewQuestions.technical) || []).forEach(q => {
+      const el = document.createElement('div'); el.className = 'q-item'; el.textContent = q; techList.appendChild(el);
+    });
+    ((r.interviewQuestions && r.interviewQuestions.behavioral) || []).forEach(q => {
+      const el = document.createElement('div'); el.className = 'q-item'; el.textContent = q; behList.appendChild(el);
+    });
+    document.getElementById('futureScope').textContent = r.futureScope || '';
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+})();
+</script>
+</body>
+</html>
