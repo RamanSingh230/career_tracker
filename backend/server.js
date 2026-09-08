@@ -10,7 +10,7 @@ app.use(cors({ origin: true }));
 
 const PORT = process.env.PORT || 4000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
 if (!GEMINI_API_KEY) {
   console.warn("[vantage] Warning: GEMINI_API_KEY is not set. /api/analyze will fail until it is.");
