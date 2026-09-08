@@ -52,23 +52,50 @@ app.post("/api/analyze", rateLimit, async (req, res) => {
 
     const prompt = buildPrompt(jobDesc.trim(), resumeText.trim());
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            maxOutputTokens: 1200,
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
+    async function callGemini(prompt) {
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
+  const body = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      maxOutputTokens: 1200,
+      responseMimeType: "application/json",
+    },
+  };
+
+  const delays = [1000, 3000, 7000, 15000];
+
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+ 
+    if (response.ok) {
+      return response;
+    }
+
+    // Retry only temporary server/rate-limit errors
+    if (![429, 500, 502, 503, 504].includes(response.status)) {
+      return response;
+    }
+
+    if (attempt < delays.length) {
+      console.log(
+        `[vantage] Gemini ${response.status}. Retrying in ${delays[attempt]}ms...`
+      );
+
+      await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+    }
+  }
+
+  throw new Error("Gemini service unavailable after retries");
+}
+   const response = await callGemini(prompt);
     if (!response.ok) {
       const detail = await response.text();
       console.error("[vantage] Gemini API error:", response.status, detail);
